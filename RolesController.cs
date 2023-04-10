@@ -15,10 +15,11 @@ public class RolesController : ControllerBase
     [HttpGet]
     public IActionResult Index()
     {
-        var roles = Enum.GetValues(typeof(Role))
-            .Cast<Role>()
+        var roles = Enum
+            .GetValues<Role>()
             .Select(role => new RoleResponse(role.GetName(), role.GetClaim()))
             .ToList();
+
         return Ok(roles);
     }
 

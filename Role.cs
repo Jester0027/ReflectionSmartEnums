@@ -1,5 +1,6 @@
 ﻿namespace EnumsTest;
 
+[SmartEnum<DataAttribute>]
 public enum Role
 {
     [Data(name: "Administrator", claim: RoleClaims.Administrator)]
@@ -9,7 +10,7 @@ public enum Role
     User = 1,
 
     [Data(name: "Guest", claim: RoleClaims.Guest)]
-    Guest = 2,
+    Guest = 2
 }
 
 public static class RoleClaims
@@ -22,8 +23,8 @@ public static class RoleClaims
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class DataAttribute : Attribute
 {
-    public string Name { get; set; }
-    public string Claim { get; init; }
+    public string Name { get; }
+    public string Claim { get; }
 
     public DataAttribute(string name, string claim)
     {
@@ -32,32 +33,39 @@ public sealed class DataAttribute : Attribute
     }
 }
 
+/// <summary>
+/// Marks an enum as a smart enum with the given data attribute for each value.
+/// TODO Used for compile-time checking. Verifying that each value has a data attribute with the correct type, and that the the enum is not an enum with flags.
+/// </summary>
+/// <typeparam name="TData"></typeparam>
+[AttributeUsage(AttributeTargets.Enum)]
+public sealed class SmartEnumAttribute<TData> : Attribute where TData : Attribute
+{
+    /// <summary>
+    /// The type of the data attribute that each value must have.
+    /// </summary>
+    public Type Type { get; set; } = typeof(TData);
+}
+
 public static class RoleUtils
 {
-    public static Role FromClaim(string claim)
-    {
-        return Enum
-            .GetValues(typeof(Role))
-            .Cast<Role>()
+    /// <summary>
+    /// Converts a claim string to a Role enum value
+    /// </summary>
+    /// <param name="claim"></param>
+    /// <returns></returns>
+    public static Role FromClaim(string claim) =>
+        Enum.GetValues<Role>()
             .Single(role => role.GetClaim() == claim);
-    }
 }
 
 public static class RoleExtensions
 {
     public static string GetName(this Role role)
-    {
-        var attribute = role.GetAttribute<DataAttribute>();
-
-        return attribute.Name;
-    }
+        => role.GetAttribute<DataAttribute>().Name;
 
     public static string GetClaim(this Role role)
-    {
-        var attribute = role.GetAttribute<DataAttribute>();
-
-        return attribute.Claim;
-    }
+        => role.GetAttribute<DataAttribute>().Claim;
 }
 
 public static class EnumExtensions
